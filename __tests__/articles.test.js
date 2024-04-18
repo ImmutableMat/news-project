@@ -23,15 +23,24 @@ describe("Get/api", () => {
         expect(endpoints).toEqual(endpointsData);
       });
   });
-});
 
-test("Get 404: responds with an error message when endpoint is entered incorrectly", () => {
-  return request(app)
-    .get("/api/artivles")
-    .expect(404)
-    .then(({ body }) => {
-      expect(body.msg).toBe("Not Found");
-    });
+  test("Get 400: responds with error when passed a bad article_id", () => {
+    return request(app)
+      .get("/api/articles/ten")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid Input");
+      });
+  });
+
+  test("Get 404: responds with an error message when endpoint is entered incorrectly", () => {
+    return request(app)
+      .get("/api/artivles")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Not Found");
+      });
+  });
 });
 
 describe("Get/api/articles/:article_id", () => {
@@ -51,13 +60,36 @@ describe("Get/api/articles/:article_id", () => {
         expect(typeof article.article_img_url).toBe("string");
       });
   });
+});
 
-  test("Get 400: responds with error when passed a bad article_id", () => {
+describe("Get/api/articles", () => {
+  test("Get 200: return with an array of all the article objects with an added count for the number of comments with that article_id", () => {
     return request(app)
-      .get("/api/articles/ten")
-      .expect(400)
+      .get("/api/articles")
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe("Invalid Input");
+        const { articles } = body;
+        expect(articles).toHaveLength(13);
+        articles.forEach((article) => {
+          expect(typeof article.article_id).toBe("number");
+          expect(typeof article.title).toBe("string");
+          expect(typeof article.topic).toBe("string");
+          expect(typeof article.author).toBe("string");
+          expect(typeof article.created_at).toBe("string");
+          expect(typeof article.votes).toBe("number");
+          expect(typeof article.article_img_url).toBe("string");
+          expect(typeof article.comment_count).toBe("string");
+        });
+      });
+  });
+  test.only("Get 200: return with an array of all the article objects including comment.count sorted by date in descending order", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        const { articles } = body;
+        expect(articles).toHaveLength(13);
+        expect(articles).toBeSortedBy("created_at", { descending: true });
       });
   });
 });
