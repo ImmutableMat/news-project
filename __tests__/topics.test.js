@@ -14,7 +14,7 @@ afterAll(() => {
 });
 
 describe("Get/api", () => {
-  test.only("Get 200: responds an endpoint of json data", () => {
+  test("Get 200: responds an endpoint of json data", () => {
     return request(app)
       .get("/api")
       .expect(200)
