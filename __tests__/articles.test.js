@@ -24,18 +24,34 @@ describe("Get/api", () => {
       });
   });
 
-  test("Get 400: responds with error when passed a bad article_id", () => {
+  test("Get 404: responds with an error message when endpoint is entered incorrectly", () => {
     return request(app)
-      .get("/api/articles/ten")
-      .expect(400)
+      .get("/api/artivles")
+      .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("Invalid Input");
+        expect(body.msg).toBe("Not Found");
+      });
+  });
+});
+
+describe("/api/topics", () => {
+  test("Get 200: responds with an array of topic objects", () => {
+    return request(app)
+      .get("/api/topics")
+      .expect(200)
+      .then(({ body }) => {
+        const { topics } = body;
+        expect(topics.length).toBe(3);
+        topics.forEach((topic) => {
+          expect(typeof topic.slug).toBe("string");
+          expect(typeof topic.description).toBe("string");
+        });
       });
   });
 
   test("Get 404: responds with an error message when endpoint is entered incorrectly", () => {
     return request(app)
-      .get("/api/artivles")
+      .get("/api/topicss")
       .expect(404)
       .then(({ body }) => {
         expect(body.msg).toBe("Not Found");
@@ -60,6 +76,23 @@ describe("Get/api/articles/:article_id", () => {
         expect(typeof article.article_img_url).toBe("string");
       });
   });
+  test("Get 400: responds with error when passed a bad article_id", () => {
+    return request(app)
+      .get("/api/articles/ten")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Bad Request");
+      });
+  });
+
+  test("Get 404: responds with an error message when passed an endpoint that doesn't exist", () => {
+    return request(app)
+      .get("/api/articles/100")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Not Found");
+      });
+  });
 });
 
 describe("Get/api/articles", () => {
@@ -82,7 +115,7 @@ describe("Get/api/articles", () => {
         });
       });
   });
-  test.only("Get 200: return with an array of all the article objects including comment.count sorted by date in descending order", () => {
+  test("Get 200: return with an array of all the article objects including comment.count sorted by date in descending order", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
@@ -90,6 +123,47 @@ describe("Get/api/articles", () => {
         const { articles } = body;
         expect(articles).toHaveLength(13);
         expect(articles).toBeSortedBy("created_at", { descending: true });
+      });
+  });
+});
+
+describe("Get/api/articles/:article_id/comments", () => {
+  test("Get 200: return with an array of comments for the given article_id", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        const { comments } = body;
+        expect(comments).toBeSortedBy("created_at", { descending: true });
+        comments.forEach((comment) => {
+          expect(comment.article_id).toBe(2);
+        });
+      });
+  });
+  test("Get 400: responds with error when passed a bad article_id", () => {
+    return request(app)
+      .get("/api/articles/notanumber/comments")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Bad Request");
+      });
+  });
+
+  test("Get 404: responds with an error message when passed a valid endpoint but doesn't exist", () => {
+    return request(app)
+      .get("/api/articles/777/comments")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Not Found");
+      });
+  });
+  test("Get 200: responds with an empty array when article_id has no comments", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        const { comments } = body;
+        expect(comments).toEqual([]);
       });
   });
 });
